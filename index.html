@@ -105,6 +105,20 @@
         pointer-events: none;
       }
 
+      .visitor-counter {
+        position: fixed;
+        left: 14px;
+        bottom: 14px;
+        z-index: 1;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--muted);
+        font-size: 0.78rem;
+        pointer-events: none;
+      }
+
       .ascii-logo {
         position: fixed;
         top: 14px;
@@ -259,6 +273,8 @@
 ╚══════╝╚═╝░░╚═╝╚═╝╚═╝░░░░░
     </div>
 
+    <div class="visitor-counter" id="visitorCounter">Visitors: …</div>
+
     <div class="disclaimer">
       This web-based tool is intended exclusively for personal and non-commercial use. Its purpose is to allow users to analyze and display metadata contained within digital files, particularly image files, for personal inspection, technical analysis, and educational purposes.
     </div>
@@ -270,6 +286,7 @@
       const selectButton = document.getElementById('selectButton');
       const fileInput = document.getElementById('fileInput');
       const resultBox = document.getElementById('result');
+      const visitorCounter = document.getElementById('visitorCounter');
       const themeToggleBtn = document.getElementById('themeToggleBtn');
       const matrixToggleBtn = document.getElementById('matrixToggleBtn');
       const matrixOverlay = document.getElementById('matrixOverlay');
@@ -280,9 +297,31 @@
 
       selectButton.addEventListener('click', () => fileInput.click());
       fileInput.addEventListener('change', handleFileSelection);
+      updateVisitorCounter();
       themeToggleBtn.addEventListener('click', toggleTheme);
       matrixToggleBtn.addEventListener('click', toggleMatrixEffect);
       matrixColorPicker.addEventListener('input', updateMatrixColor);
+
+      async function updateVisitorCounter() {
+        const storageKey = 'thomsejns-exif-visitor-count';
+
+        try {
+          const response = await fetch('https://api.countapi.xyz/hit/thomsejn/exiff');
+          if (response.ok) {
+            const data = await response.json();
+            const count = Number(data?.value || 0);
+            localStorage.setItem(storageKey, String(count));
+            visitorCounter.textContent = `Visitors: ${count}`;
+            return;
+          }
+        } catch (error) {
+          console.warn('Visitor counter unavailable, using local fallback.', error);
+        }
+
+        const fallbackCount = Number(localStorage.getItem(storageKey) || 0) + 1;
+        localStorage.setItem(storageKey, String(fallbackCount));
+        visitorCounter.textContent = `Visitors: ${fallbackCount}`;
+      }
 
       function toggleTheme() {
         const isLight = document.body.classList.toggle('light');
